@@ -1,0 +1,151 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>App1</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- 程序图标（exe / 任务栏 / 窗口）：柠檬图案，多尺寸 ICO -->
+    <ApplicationIcon>Assets\app-icon.ico</ApplicationIcon>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <Nullable>enable</Nullable>
+
+    <!-- 产品标识：EXE 属性与关于信息中显示的名称 -->
+    <AssemblyTitle>Lemon Minecraft Launcher</AssemblyTitle>
+    <Product>Lemon Minecraft Launcher</Product>
+    <AssemblyName>LemonMinecraftLauncher</AssemblyName>
+    <Description>现代化 Minecraft 启动器</Description>
+    <Company>Lemon</Company>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Copyright>Copyright © 2026</Copyright>
+
+    <!--
+      调试期按「非打包」方式运行：构建产物可直接双击启动，
+      避免 MSIX 部署缓存导致一直运行旧版本代码。
+      需要打包发布（MSIX）时，把下面这行注释掉即可。
+    -->
+    <WindowsPackageType>None</WindowsPackageType>
+  </PropertyGroup>
+
+  <!-- 非打包运行时资源从 exe 所在目录解析，需要把 Assets 一并复制到输出目录 -->
+  <ItemGroup>
+    <Content Update="Assets\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!--
+    MSIX 磁贴与启动屏资源：只有打包发布时才用得到。
+    注意必须用 Content Remove：SDK 的默认 glob 会把 Assets 下的图片全部当作
+    Content 复制到输出，单纯不写 Include 是排除不掉的。
+    需要打包 MSIX 时把 WindowsPackageType 去掉即可自动恢复。
+  -->
+  <ItemGroup Condition="'$(WindowsPackageType)' == 'None'">
+    <Content Remove="Assets\SplashScreen.scale-200.png" />
+    <Content Remove="Assets\LockScreenLogo.scale-200.png" />
+    <Content Remove="Assets\Square150x150Logo.scale-200.png" />
+    <Content Remove="Assets\Square44x44Logo.scale-200.png" />
+    <Content Remove="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Remove="Assets\StoreLogo.png" />
+    <Content Remove="Assets\Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+
+  <!-- 应用图标：界面（标题栏）通过 ms-appx 引用，任何运行方式都要保留 -->
+  <ItemGroup>
+    <Content Include="Assets\app-icon.png" />
+  </ItemGroup>
+
+  <!-- 启动页轮换背景图：同时打进 MSIX 包与输出目录，兼容打包 / 非打包运行 -->
+  <ItemGroup>
+    <Content Include="Assets\Backgrounds\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <!--
+    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
+    Tools extension to be activated for this project even if the Windows App SDK Nuget
+    package has not yet been restored.
+  -->
+  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2705" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+  </ItemGroup>
+
+  <!--
+    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
+    Explorer "Package and Publish" context menu entry to be enabled for this project even if
+    the Windows App SDK Nuget package has not yet been restored.
+  -->
+  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+  </PropertyGroup>
+
+  <!--
+    发布配置。
+    重要：绝不能开启 PublishTrimmed。本项目使用反射式 JSON 序列化（Core/Json.cs），
+    裁剪会写入 JsonSerializer.IsReflectionEnabledByDefault=false，
+    导致 Modrinth/CurseForge 检索、设置读写等所有 JSON 调用在运行时抛异常。
+  -->
+  <PropertyGroup>
+    <PublishTrimmed>False</PublishTrimmed>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
+
+  <!-- 发布（非 Debug）时的体积优化 -->
+  <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+    <!--
+      只保留中文与英文资源，去掉 .NET / Windows App SDK 携带的数十种语言附属程序集。
+      这是体积优化里收益最大、且完全不改变运行行为的一项。
+    -->
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
+
+    <!--
+      不打包 ICU 全球化数据（约 28 MB）。
+      项目未使用 CultureInfo / 区域性格式化，日期与数字均用固定格式串输出，
+      因此行为不变。
+    -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- 发布产物不带调试符号 -->
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+
+    <!--
+      关闭 ReadyToRun。它会预编译并嵌入大量本机代码，明显增大体积，
+      代价是首次启动稍慢。
+    -->
+    <PublishReadyToRun>false</PublishReadyToRun>
+  </PropertyGroup>
+
+  <!--
+    发布完成后剥离未使用的 Windows ML / AI 运行时（onnxruntime + DirectML，约 40 MB）。
+    Windows App SDK 元包会强制携带这些组件，且框架依赖模式下不允许通过包引用排除
+    （会报 "must reference Microsoft.WindowsAppSDK.ML"），因此只能在发布结束时删除。
+    本项目不含任何 AI 功能，这些程序集不会被加载。
+    若遇到启动异常，删除此 Target 即可恢复。
+  -->
+  <Target Name="StripUnusedAiRuntime"
+          AfterTargets="Publish"
+          Condition="'$(WindowsPackageType)' == 'None'">
+    <ItemGroup>
+      <UnusedAiRuntime Include="$(PublishDir)onnxruntime.dll" />
+      <UnusedAiRuntime Include="$(PublishDir)DirectML.dll" />
+      <UnusedAiRuntime Include="$(PublishDir)Microsoft.Windows.AI.MachineLearning.dll" />
+    </ItemGroup>
+    <Delete Files="@(UnusedAiRuntime)" ContinueOnError="true" />
+  </Target>
+</Project>

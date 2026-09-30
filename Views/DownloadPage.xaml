@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="App1.Views.DownloadPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:App1.Models"
+    xmlns:converters="using:App1.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    NavigationCacheMode="Required">
+
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    </Page.Resources>
+
+    <Grid Padding="20" ColumnSpacing="14">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="176" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="340" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ============ 版本类型 ============ -->
+        <Border Grid.Column="0" Style="{StaticResource SettingsCardStyle}" Padding="10">
+            <StackPanel Spacing="10">
+                <TextBlock Text="版本类型" Style="{StaticResource SectionTitleStyle}" Margin="4,0,0,0" />
+
+                <ListView SelectedIndex="{Binding FilterIndex, Mode=TwoWay}"
+                          SelectionMode="Single"
+                          Background="Transparent">
+                    <ListViewItem>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8FD;" FontSize="14" />
+                            <TextBlock Text="全部版本" />
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE735;" FontSize="14" />
+                            <TextBlock Text="正式版" />
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE7C5;" FontSize="14" />
+                            <TextBlock Text="快照" />
+                        </StackPanel>
+                    </ListViewItem>
+                    <ListViewItem>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE81C;" FontSize="14" />
+                            <TextBlock Text="远古版" />
+                        </StackPanel>
+                    </ListViewItem>
+                </ListView>
+
+                <Border Style="{StaticResource SubtleCardStyle}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="下载源" Style="{StaticResource HintTextStyle}" />
+                        <TextBlock Text="{Binding SourceText}"
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource HintTextStyle}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ============ 版本列表 ============ -->
+        <Border Grid.Column="1" Style="{StaticResource SettingsCardStyle}" Padding="14">
+            <Grid RowSpacing="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             PlaceholderText="输入版本号搜索，例如 1.20.4"
+                             Text="{Binding SearchText, Mode=TwoWay}" />
+                    <Button Grid.Column="1" Content="刷新列表" Command="{Binding RefreshCommand}" />
+                </Grid>
+
+                <ProgressRing Grid.Row="1"
+                              IsActive="{Binding IsLoading}"
+                              Width="32" Height="32"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+
+                <ListView Grid.Row="1"
+                          ItemsSource="{Binding FilteredVersions}"
+                          SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                          SelectionMode="Single"
+                          Background="Transparent">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="models:VersionManifestEntry">
+                            <Grid Padding="2,8,2,8" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Width="36" Height="36"
+                                        CornerRadius="8"
+                                        Background="Transparent">
+                                    <FontIcon Glyph="&#xE7FC;" FontSize="15"
+                                              Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                                </Border>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="{Binding Id}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding TypeText}"
+                                               Style="{StaticResource HintTextStyle}" />
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding ReleaseDateText}"
+                                           Style="{StaticResource HintTextStyle}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+
+        <!-- ============ 安装设置 ============ -->
+        <Border Grid.Column="2" Style="{StaticResource SettingsCardStyle}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Style="{StaticResource IconBadgeStyle}">
+                            <FontIcon Glyph="&#xE896;" FontSize="18"
+                                      Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="安装设置" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource HintTextStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBox Header="版本名称" Text="{Binding Name, Mode=TwoWay}" />
+
+                    <ComboBox Header="模组加载器"
+                              ItemsSource="{Binding Loaders}"
+                              SelectedItem="{Binding SelectedLoader, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch" />
+
+                    <ComboBox Header="加载器版本"
+                              ItemsSource="{Binding LoaderVersions}"
+                              SelectedItem="{Binding SelectedLoaderVersion, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="自动选择最新版本"
+                              IsEnabled="{Binding HasLoaderVersion}"
+                              Visibility="{Binding HasLoaderVersion, Converter={StaticResource BoolToVisibility}}" />
+
+                    <NumberBox Header="最大内存（MB）"
+                               Value="{Binding MaxMemoryMb, Mode=TwoWay}"
+                               Minimum="512" Maximum="32768"
+                               SpinButtonPlacementMode="Inline" />
+
+                    <ComboBox Header="Java "
+                              ItemsSource="{Binding JavaList}"
+                              SelectedItem="{Binding SelectedJava, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch"
+                              PlaceholderText="自动选择推荐版本">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:JavaInfo">
+                                <TextBlock Text="{Binding DisplayText}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Button Command="{Binding StartDownloadCommand}"
+                            HorizontalAlignment="Stretch"
+                            Height="46"
+                            CornerRadius="10"
+                            FontSize="15"
+                            Style="{StaticResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE896;" FontSize="16" />
+                            <TextBlock Text="开始下载" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+
+                    <ProgressBar Value="{Binding ProgressValue}"
+                                 IsIndeterminate="{Binding IsIndeterminate}"
+                                 HorizontalAlignment="Stretch"
+                                 Height="6"
+                                 CornerRadius="3"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Page>

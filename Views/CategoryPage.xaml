@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="App1.Views.CategoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:App1.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Name="PageRoot">
+
+    <Page.Resources>
+        <converters:PlatformToBrushConverter x:Key="PlatformToBrush" />
+
+        <!--
+          分类主题页的卡片：与模组页保持同一套视觉，
+          数据源徽标与分类标签同样可点击，点标签可平级切到另一个分类。
+        -->
+        <DataTemplate x:Key="CategoryTileTemplate">
+            <Border Height="104"
+                    CornerRadius="6"
+                    Padding="12"
+                    HorizontalAlignment="Stretch"
+                    Tapped="OnTileTapped"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Column="0"
+                            Grid.RowSpan="2"
+                            Width="52" Height="52"
+                            CornerRadius="10"
+                            VerticalAlignment="Top"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}">
+                        <Image Source="{Binding IconUrl}" Stretch="UniformToFill" />
+                    </Border>
+
+                    <Grid Grid.Column="1" Grid.Row="0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Text="{Binding Name}"
+                                   FontWeight="SemiBold"
+                                   VerticalAlignment="Center"
+                                   MaxLines="1"
+                                   TextTrimming="CharacterEllipsis" />
+
+                        <Border Grid.Column="1"
+                                Style="{StaticResource SourceBadgeStyle}"
+                                Background="{Binding Platform, Converter={StaticResource PlatformToBrush}}"
+                                ToolTipService.ToolTip="{Binding SourceTipText}">
+                            <TextBlock Text="{Binding PlatformText}"
+                                       FontSize="10"
+                                       Foreground="White" />
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Column="1" Grid.Row="1" ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0"
+                                Content="{Binding PrimaryCategoryText}"
+                                Click="OnCategoryTagClick"
+                                Style="{StaticResource TagButtonStyle}"
+                                ToolTipService.ToolTip="查看该分类下的更多资源" />
+
+                        <Button Grid.Column="1"
+                                Content="{Binding PrimaryLoaderText}"
+                                Click="OnLoaderTagClick"
+                                Style="{StaticResource TagButtonStyle}"
+                                ToolTipService.ToolTip="查看使用该加载器的资源" />
+
+                        <TextBlock Grid.Column="2"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   FontSize="12"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                   ToolTipService.ToolTip="下载量">
+                            <Run Text="↓ " />
+                            <Run Text="{Binding DownloadsText}" />
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid Padding="20" RowSpacing="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ==================== 顶栏：返回 + 分类名 + 排序 ==================== -->
+        <Grid Grid.Row="0" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Click="OnBackClick"
+                    VerticalAlignment="Center"
+                    ToolTipService.ToolTip="返回模组页">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE72B;" FontSize="14" />
+                    <TextBlock Text="返回" />
+                </StackPanel>
+            </Button>
+
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="10"
+                        VerticalAlignment="Center">
+                <TextBlock x:Name="CategoryTitle"
+                           Text="分类"
+                           Style="{StaticResource PageTitleStyle}" />
+                <Border Style="{StaticResource PillStyle}"
+                        Padding="10,2,10,2"
+                        VerticalAlignment="Center">
+                    <TextBlock x:Name="CategoryKindText"
+                               Text="模组 · 类别"
+                               Style="{StaticResource PillTextStyle}" />
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2"
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        VerticalAlignment="Center">
+                <TextBlock Text="排序"
+                           Style="{StaticResource CaptionTextStyle}"
+                           VerticalAlignment="Center" />
+                <ComboBox x:Name="SortBox"
+                          Width="126"
+                          Height="32"
+                          MinHeight="32"
+                          SelectedIndex="1"
+                          SelectionChanged="OnSortChanged">
+                    <ComboBoxItem Content="相关度" />
+                    <ComboBoxItem Content="下载量" />
+                    <ComboBoxItem Content="关注数" />
+                    <ComboBoxItem Content="最近更新" />
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
+        <!-- ==================== 分类下的资源 ==================== -->
+        <Border Grid.Row="1" Style="{StaticResource SettingsCardStyle}" Padding="14">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ProgressRing Grid.Row="0"
+                              IsActive="{Binding IsBusy}"
+                              Width="36" Height="36"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+
+                <!-- 与模组页一致：固定 4 列、卡片宽度随窗口自适应 -->
+                <GridView x:Name="ResultGrid"
+                          Grid.Row="0"
+                          ItemsSource="{Binding Results}"
+                          ItemTemplate="{StaticResource CategoryTileTemplate}"
+                          SelectionMode="None"
+                          Background="Transparent"
+                          Padding="2"
+                          SizeChanged="OnTileGridSizeChanged">
+                    <GridView.ItemContainerStyle>
+                        <Style TargetType="GridViewItem">
+                            <Setter Property="CornerRadius" Value="6" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,12,12" />
+                            <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </GridView.ItemContainerStyle>
+                </GridView>
+
+                <StackPanel Grid.Row="1"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            HorizontalAlignment="Center"
+                            Margin="0,12,0,2">
+                    <Button Content="首页" Command="{Binding FirstPageCommand}" />
+                    <Button Content="上一页" Command="{Binding PrevPageCommand}" />
+                    <Border Style="{StaticResource PillStyle}" Padding="14,4,14,4">
+                        <TextBlock Text="{Binding PageText}" Style="{StaticResource PillTextStyle}" />
+                    </Border>
+                    <Button Content="下一页" Command="{Binding NextPageCommand}" />
+                    <Button Content="末页" Command="{Binding LastPageCommand}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="App1.Views.ResourceDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:App1.Models"
+    xmlns:converters="using:App1.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    </Page.Resources>
+
+    <!-- 整个页面共用一个滚动容器，使顶部封面随内容一起滚动 -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollMode="Disabled"
+                  HorizontalContentAlignment="Stretch">
+        <StackPanel>
+
+        <!-- ==================== 顶部 Hero：背景为该资源的第一张截图 ==================== -->
+        <Grid Height="330">
+            <!-- 封面图 -->
+            <Image Source="{Binding Resource.CoverUrl}" Stretch="UniformToFill" />
+
+            <!-- 暗化遮罩：上浅下深，保证白色文字在任意图片上都能看清 -->
+            <Border>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#99000000" Offset="0" />
+                        <GradientStop Color="#73000000" Offset="0.45" />
+                        <GradientStop Color="#E6000000" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+            </Border>
+
+            <!-- 顶部：仅返回 -->
+            <Button VerticalAlignment="Top"
+                    HorizontalAlignment="Left"
+                    Margin="24,16,0,0"
+                    Click="OnBackClick"
+                    Background="#40FFFFFF"
+                    BorderBrush="#80FFFFFF"
+                    BorderThickness="1"
+                    Foreground="White"
+                    ToolTipService.ToolTip="返回资源中心">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE72B;" FontSize="14" />
+                    <TextBlock Text="返回" />
+                </StackPanel>
+            </Button>
+
+            <!-- 主体信息 -->
+            <Grid VerticalAlignment="Bottom" Padding="32,0,32,26" ColumnSpacing="22">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        Width="104" Height="104"
+                        CornerRadius="16"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}">
+                    <Image Source="{Binding Resource.IconUrl}" Stretch="UniformToFill" />
+                </Border>
+
+                <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
+                    <!--
+                      名称 + 加载器标识。
+                      标识紧跟标题右侧（Auto 列给标题、* 列左对齐放徽标），
+                      标题过长时会自动换行而不会把徽标挤出去。
+                    -->
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding Resource.Name}"
+                                   FontSize="28"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center" />
+
+                        <ItemsControl Grid.Column="1"
+                                      ItemsSource="{Binding Resource.LoaderBadges}"
+                                      HorizontalAlignment="Left"
+                                      VerticalAlignment="Center"
+                                      ToolTipService.ToolTip="该资源支持的模组加载器">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="6" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource LoaderBadgeStyle}">
+                                        <TextBlock Text="{Binding}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="White" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+
+                    <TextBlock Text="{Binding Resource.Author}"
+                               FontSize="13"
+                               Foreground="#CCFFFFFF" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="14">
+                        <TextBlock FontSize="12" Foreground="#E6FFFFFF"
+                                   ToolTipService.ToolTip="下载量">
+                            <Run Text="↓ " /><Run Text="{Binding Resource.DownloadsText}" />
+                        </TextBlock>
+                        <TextBlock FontSize="12" Foreground="#E6FFFFFF"
+                                   ToolTipService.ToolTip="关注数（数据源未提供评分）">
+                            <Run Text="&#x2665; " /><Run Text="{Binding Resource.FollowsText}" />
+                        </TextBlock>
+                        <TextBlock Text="{Binding Resource.CategoriesText}"
+                                   FontSize="12"
+                                   Foreground="#E6FFFFFF" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding Resource.Summary}"
+                               FontSize="13"
+                               MaxLines="2"
+                               TextWrapping="Wrap"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="#E6FFFFFF" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                        <!-- 背景是图片，加一圈半透明白描边让按钮轮廓在任意底图上都清晰 -->
+                        <Button Command="{Binding InstallCommand}"
+                                Style="{StaticResource AccentButtonStyle}"
+                                MinWidth="150"
+                                Height="36"
+                                BorderBrush="#99FFFFFF"
+                                BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE896;" FontSize="14" />
+                                <TextBlock Text="安装" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding OpenProjectCommand}"
+                                Height="36"
+                                Background="#40FFFFFF"
+                                BorderBrush="#99FFFFFF"
+                                BorderThickness="1"
+                                Foreground="White">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE71B;" FontSize="14" />
+                                <TextBlock Text="项目主页" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- ==================== 下方内容 ==================== -->
+        <StackPanel Spacing="14" Padding="28,18,28,28" MaxWidth="1200" HorizontalAlignment="Center">
+
+                <!-- 屏幕截图 -->
+                <Border Style="{StaticResource SettingsCardStyle}"
+                        Visibility="{Binding HasGallery, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Border Style="{StaticResource IconBadgeStyle}">
+                                <FontIcon Glyph="&#xE91B;" FontSize="18"
+                                          Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                            </Border>
+                            <TextBlock Text="屏幕截图"
+                                       Style="{StaticResource SectionTitleStyle}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                      HorizontalScrollMode="Enabled"
+                                      VerticalScrollMode="Disabled"
+                                      HorizontalContentAlignment="Left">
+                            <ItemsControl ItemsSource="{Binding Gallery}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="10" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="300" Height="169"
+                                                CornerRadius="8"
+                                                Background="{ThemeResource LayerFillColorDefaultBrush}">
+                                            <Image Source="{Binding}" Stretch="UniformToFill" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+
+                <!-- 简介 -->
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="关于此资源" Style="{StaticResource SectionTitleStyle}" />
+                        <TextBlock Text="{Binding DescriptionText}"
+                                   TextWrapping="Wrap"
+                                   MaxHeight="260"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   FontSize="13" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 可用版本 -->
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                                <Border Style="{StaticResource IconBadgeStyle}">
+                                    <FontIcon Glyph="&#xE8B5;" FontSize="18"
+                                              Foreground="{ThemeResource AccentFillColorDefaultBrush}" />
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="可用版本" Style="{StaticResource SectionTitleStyle}" />
+                                    <TextBlock Text="{Binding StatusText}" Style="{StaticResource SettingsRowSubtitleStyle}" />
+                                </StackPanel>
+                            </StackPanel>
+                            <ProgressRing Grid.Column="1"
+                                          IsActive="{Binding IsLoading}"
+                                          Width="24" Height="24" />
+                        </Grid>
+
+                        <ListView ItemsSource="{Binding Versions}"
+                                  SelectedItem="{Binding SelectedVersion, Mode=TwoWay}"
+                                  SelectionMode="Single"
+                                  MaxHeight="320"
+                                  Background="Transparent">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="models:ResourceVersion">
+                                    <Grid Padding="2,8,2,8" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Spacing="3">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Style="{StaticResource SettingsRowSubtitleStyle}"
+                                                       TextTrimming="CharacterEllipsis">
+                                                <Run Text="{Binding GameVersionsText}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding SizeText}"
+                                                       Style="{StaticResource SettingsRowSubtitleStyle}"
+                                                       HorizontalAlignment="Right" />
+                                            <TextBlock Text="{Binding PublishedText}"
+                                                       Style="{StaticResource SettingsRowSubtitleStyle}"
+                                                       HorizontalAlignment="Right" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+
+                        <TextBlock Text="{Binding SelectedVersionDetail}"
+                                   Style="{StaticResource CaptionTextStyle}" />
+
+                        <!-- 选中版本的更新日志 -->
+                        <Border Background="{ThemeResource LayerFillColorDefaultBrush}"
+                                CornerRadius="6"
+                                Padding="14">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="更新日志" FontWeight="SemiBold" FontSize="13" />
+                                <ScrollViewer MaxHeight="180" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock Text="{Binding SelectedChangelog}"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- 安装到游戏版本 -->
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="安装" Style="{StaticResource SectionTitleStyle}" />
+
+                        <ComboBox Header="游戏版本"
+                                  ItemsSource="{Binding Instances}"
+                                  SelectedItem="{Binding TargetInstance, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"
+                                  PlaceholderText="请选择要安装到的版本">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="models:GameInstance">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock Text="{Binding VersionText}"
+                                                   FontSize="12"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <Button Command="{Binding InstallCommand}"
+                                HorizontalAlignment="Stretch"
+                                Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE896;" FontSize="14" />
+                                <TextBlock Text="安装" />
+                            </StackPanel>
+                        </Button>
+
+                        <ProgressBar IsIndeterminate="{Binding IsBusy}"
+                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"
+                                     HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

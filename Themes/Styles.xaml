@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:App1.Models">
+
+    <!-- ============ 基础尺寸 ============ -->
+    <CornerRadius x:Key="CardCornerRadius">12</CornerRadius>
+    <CornerRadius x:Key="ControlCornerRadiusSmall">6</CornerRadius>
+    <Thickness x:Key="CardPadding">18,16,18,16</Thickness>
+    <Thickness x:Key="PagePadding">24,20,24,28</Thickness>
+    <x:Double x:Key="PageMaxWidth">1180</x:Double>
+
+    <!-- ============ 卡片 ============ -->
+    <Style x:Key="SettingsCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource CardCornerRadius}" />
+        <Setter Property="Padding" Value="{StaticResource CardPadding}" />
+    </Style>
+
+    <!-- 账户页卡片：圆角更小、带轻微投影，贴近 Windows 11 设置的观感 -->
+    <ThemeShadow x:Key="AccountsCardShadow" />
+    <Style x:Key="AccountsCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="18" />
+        <!-- 注意：Translation 不是依赖属性，无法在 Style 中设置；
+             需在每个卡片上单独写 Translation="0,0,16"，ThemeShadow 才会产生可见投影 -->
+        <Setter Property="Shadow" Value="{StaticResource AccountsCardShadow}" />
+    </Style>
+
+    <Style x:Key="SubtleCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource LayerFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="12" />
+    </Style>
+
+    <!--
+      卡片上的分类标签：本身是可点击按钮，点击进入该分类的主题页。
+      用极简胶囊外观，避免抢走卡片主体的视觉重心。
+    -->
+    <Style x:Key="TagButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="Padding" Value="8,2,8,2" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- 深色封面图上的分类标签（Hero 卡片用），保证白色文字可读 -->
+    <Style x:Key="OverlayTagButtonStyle" TargetType="Button" BasedOn="{StaticResource TagButtonStyle}">
+        <Setter Property="Background" Value="#59000000" />
+        <Setter Property="Foreground" Value="#FFFFFFFF" />
+    </Style>
+
+    <!--
+      类别胶囊按钮：模组页的类别入口。
+      点击进入该类别独立页（而不是在当前页筛选），因此做成按钮而非可选中项。
+    -->
+    <Style x:Key="CategoryChipStyle" TargetType="Button">
+        <Setter Property="Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="15,6,15,6" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- 数据源徽标：底色由 PlatformToBrushConverter 按平台注入 -->
+    <Style x:Key="SourceBadgeStyle" TargetType="Border">
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="6,1,6,1" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- 模组加载器标识：统一使用强调色，保证同类信息样式一致 -->
+    <Style x:Key="LoaderBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="8,2,8,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- 顶部主视觉卡片（深色强调渐变，保证白色文字可读） -->
+    <Style x:Key="HeroCardStyle" TargetType="Border">
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="0.0" />
+                    <GradientStop Color="{ThemeResource SystemAccentColorDark1}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="CornerRadius" Value="16" />
+        <Setter Property="Padding" Value="26,22,26,22" />
+    </Style>
+
+    <!-- 分区标题前的图标容器：不加底色，让图标直接落在页面/卡片背景上 -->
+    <Style x:Key="IconBadgeStyle" TargetType="Border">
+        <Setter Property="Width" Value="44" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style x:Key="PillStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource AccentFillColorSecondaryBrush}" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="8,2,8,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="SuccessPillStyle" TargetType="Border" BasedOn="{StaticResource PillStyle}">
+        <Setter Property="Background" Value="{ThemeResource SystemFillColorSuccessBackgroundBrush}" />
+    </Style>
+
+    <Style x:Key="WarningPillStyle" TargetType="Border" BasedOn="{StaticResource PillStyle}">
+        <Setter Property="Background" Value="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+    </Style>
+
+    <!-- ============ 文本 ============ -->
+    <Style x:Key="PageTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style x:Key="HeroTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+    </Style>
+
+    <Style x:Key="HeroCaptionStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{ThemeResource TextOnAccentFillColorSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="CaptionTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="HintTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+    </Style>
+
+    <Style x:Key="MetricValueStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="PillTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+    </Style>
+
+    <Style x:Key="MonoTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Consolas" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+    <!-- ============ 空状态 ============ -->
+    <Style x:Key="EmptyStatePanelStyle" TargetType="StackPanel">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Spacing" Value="8" />
+        <Setter Property="Padding" Value="24" />
+    </Style>
+
+    <!-- ============ 设置分组卡片（Windows 设置风格） ============ -->
+    <!-- 一张卡片承载一个分组，行与行之间用缩进分隔线区隔。
+         Windows 11 设置使用近似直角的 4px 圆角与极淡描边。 -->
+    <Style x:Key="SettingsGroupCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <!-- 设置项行：图标 + 标题/副标题 + 尾部控件 -->
+    <Style x:Key="SettingsRowStyle" TargetType="Grid">
+        <Setter Property="Padding" Value="16,13,16,13" />
+        <Setter Property="ColumnSpacing" Value="14" />
+        <!-- 显式拉伸，确保「标题列(*)/控件列(Auto)」中的控件始终贴住行尾 -->
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <Style x:Key="SettingsRowIconStyle" TargetType="FontIcon">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="SettingsRowTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- 左侧缩进的行分隔线，与图标右侧对齐 -->
+    <Style x:Key="SettingsRowDividerStyle" TargetType="Border">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="54,0,0,0" />
+        <Setter Property="Background" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+    </Style>
+
+    <!-- 分组标题（卡片上方的标题，Windows 11 使用深色 SemiBold；
+         上边距大于下边距，使其紧贴所属卡片、与上一组拉开距离） -->
+    <Style x:Key="SettingsGroupHeaderStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+        <Setter Property="Margin" Value="2,10,0,0" />
+    </Style>
+
+    <!-- 设置项副标题：Windows 设置中用较清晰的次级灰，而非最浅的提示灰 -->
+    <Style x:Key="SettingsRowSubtitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+
+    <!-- 紧凑开关：默认 ToggleSwitch 模板会为 OnContent/OffContent 预留内容区，
+         即使内容为空也占据约 154px 宽度，导致开关本体无法贴住行尾。
+         这里用最小模板彻底移除内容区，仅保留轨道与滑块。 -->
+    <Style x:Key="CompactToggleSwitchStyle" TargetType="ToggleSwitch">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Width" Value="44" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleSwitch">
+                    <Grid x:Name="RootGrid" Width="44" Height="22" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="RootGrid"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.85" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="RootGrid"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.7" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="RootGrid"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0.35" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+
+                            <VisualStateGroup x:Name="ToggleStates">
+                                <VisualState x:Name="Dragging" />
+                                <VisualState x:Name="Off">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SwitchKnob"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                         To="0" Duration="0:0:0.12" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TrackBorder"
+                                                                       Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource ControlFillColorSecondaryBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SwitchKnob"
+                                                                       Storyboard.TargetProperty="Fill">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="On">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SwitchKnob"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                         To="22" Duration="0:0:0.12" />
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TrackBorder"
+                                                                       Storyboard.TargetProperty="Background">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource AccentFillColorDefaultBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SwitchKnob"
+                                                                       Storyboard.TargetProperty="Fill">
+                                            <DiscreteObjectKeyFrame KeyTime="0"
+                                                                    Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Border x:Name="TrackBorder"
+                                Width="44" Height="22"
+                                CornerRadius="11"
+                                Background="{ThemeResource ControlFillColorSecondaryBrush}">
+                            <Ellipse x:Name="SwitchKnob"
+                                     Width="16" Height="16"
+                                     Margin="3,0,0,0"
+                                     HorizontalAlignment="Left"
+                                     VerticalAlignment="Center"
+                                     Fill="{ThemeResource TextFillColorSecondaryBrush}">
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform X="0" />
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 大号操作按钮 ============ -->
+    <Style x:Key="PrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+        <Setter Property="Height" Value="52" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+        <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <!-- ============ 资源卡片模板（模组页与搜索页共用） ============ -->
+
+    <!-- 完整卡片：图标、名称、作者、简介与指标 -->
+    <DataTemplate x:Key="ResourceCardTemplate">
+        <Border Width="256"
+                Margin="0,0,12,12"
+                Padding="12"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid RowSpacing="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Width="52" Height="52"
+                            CornerRadius="10"
+                            Background="{ThemeResource LayerFillColorDefaultBrush}">
+                        <Image Source="{Binding IconUrl}" Stretch="UniformToFill" />
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
+                        <TextBlock Text="{Binding Name}"
+                                   FontWeight="SemiBold"
+                                   MaxLines="1"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Author}"
+                                   FontSize="12"
+                                   MaxLines="1"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Grid.Row="1"
+                           Text="{Binding Summary}"
+                           FontSize="12"
+                           MaxLines="2"
+                           TextWrapping="Wrap"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12">
+                    <TextBlock FontSize="11"
+                               VerticalAlignment="Center"
+                               ToolTipService.ToolTip="下载量"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}">
+                        <Run Text="↓ " />
+                        <Run Text="{Binding DownloadsText}" />
+                    </TextBlock>
+                    <TextBlock FontSize="11"
+                               VerticalAlignment="Center"
+                               ToolTipService.ToolTip="关注数（数据源未提供评分，以此衡量人气）"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}">
+                        <Run Text="&#x2665; " />
+                        <Run Text="{Binding FollowsText}" />
+                    </TextBlock>
+                    <TextBlock Text="{Binding UpdatedText}"
+                               FontSize="11"
+                               VerticalAlignment="Center"
+                               ToolTipService.ToolTip="最近更新"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </DataTemplate>
+</ResourceDictionary>
